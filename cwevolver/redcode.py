@@ -11,10 +11,10 @@ INSTRUCTION_REGEX = re.compile(
     re.I)
 
 
-OPCODES = {'DAT', 'MOV', 'ADD', 'SUB', 'MUL',
+OPCODES = ['DAT', 'MOV', 'ADD', 'SUB', 'MUL',
            'DIV', 'MOD', 'JMP', 'JMZ', 'JMN',
            'DJN', 'SPL', 'SLT', 'CMP', 'SEQ',
-           'SNE', 'NOP'}
+           'SNE', 'NOP']
 # DAT: terminate process
 # MOV: move from A to B
 # ADD: add A to B, store result in B
@@ -33,7 +33,7 @@ OPCODES = {'DAT', 'MOV', 'ADD', 'SUB', 'MUL',
 # SNE: Skip next instruction if A is not equal to B
 # NOP: No operation
 
-MODIFIERS = {'A', 'B', 'AB', 'BA', 'F', 'X', 'I'}
+MODIFIERS = ['A', 'B', 'AB', 'BA', 'F', 'X', 'I']
 # A:  Instructions read and write A-fields.
 # B:  Instructions read and write B-fields.
 # AB: Instructions read the A-field of the A-instruction and the
@@ -48,7 +48,7 @@ MODIFIERS = {'A', 'B', 'AB', 'BA', 'F', 'X', 'I'}
 # I:  Instructions read and write entire instructions.
 
 
-MODES = { '#', '$', '@', '<', '>', '*', '{', '}'}
+MODES = ['#', '$', '@', '<', '>', '*', '{', '}']
 # IMMEDIATE: immediate
 # DIRECT: direct
 # INDIRECT_B: indirect using B-field
