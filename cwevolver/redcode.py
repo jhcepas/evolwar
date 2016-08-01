@@ -60,7 +60,7 @@ MODES = ['#', '$', '@', '<', '>', '*', '{', '}']
 
 
 class Warrior(object):
-    "An encapsulation of a Redcode Warrior, with instructions and meta-data"
+    "A Redcode Warrior, with instructions and meta-data"
 
     def __init__(self, name='Unnamed', author='Anonymous', date=None,
                  version=None, strategy=None, start=0):
@@ -68,7 +68,7 @@ class Warrior(object):
         self.author = author
         self.date = date
         self.version = version
-        self.strategy = strategy
+        self.strategy = strategy or []
         self.start = start
         self.instructions = []
 
@@ -82,6 +82,7 @@ class Warrior(object):
         return "<Warrior name=%s %d instructions>" % (self.name,
                                                       len(self.instructions))
 
+
 Instruction = namedtuple('Instruction',
                          'opcode modifier a_mode a_number b_mode b_number')
 
@@ -94,7 +95,6 @@ def parse(fname, definitions={}):
     code_address = 0
 
     warrior = Warrior()
-    warrior.strategy = []
 
     # use a version of environment because we're going to add names to it
     environment = copy(definitions)
@@ -212,9 +212,9 @@ def parse(fname, definitions={}):
 
                 # add parts of instruction read. the fields should be parsed
                 # as an expression in the second pass, to expand labels
-                warrior.instructions.append(Instruction(opcode, modifier,
-                                                        a_mode, int(a_number),
-                                                        b_mode, int(b_number)))
+                warrior.instructions.append(Instruction(opcode, modifier.upper(),
+                                                        a_mode, a_number,
+                                                        b_mode, b_number))
 
             # increment code counting
             code_address += 1
@@ -235,8 +235,14 @@ def parse(fname, definitions={}):
 
         # evaluate instruction fields using global environment and labels
         if isinstance(instruction.a_number, str):
-            instruction.a_number = eval(instruction.a_number, environment, relative_labels)
+            instr = list(instruction)
+            instr[3] = eval(instruction.a_number, environment, relative_labels)
+            instruction = Instruction(*instr)
+            warrior.instructions[n] = instruction
         if isinstance(instruction.b_number, str):
-            instruction.b_number = eval(instruction.b_number, environment, relative_labels)
+            instr = list(instruction)
+            instr[5] = eval(instruction.b_number, environment, relative_labels)
+            instruction = Instruction(*instr)
+            warrior.instructions[n] = instruction
 
     return warrior
