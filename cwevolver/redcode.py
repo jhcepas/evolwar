@@ -47,6 +47,8 @@ MODIFIERS = {'A', 'B', 'AB', 'BA', 'F', 'X', 'I'}
 #     B to A).
 # I:  Instructions read and write entire instructions.
 
+
+MODES = { '#', '$', '@', '<', '>', '*', '{', '}'}
 # IMMEDIATE: immediate
 # DIRECT: direct
 # INDIRECT_B: indirect using B-field

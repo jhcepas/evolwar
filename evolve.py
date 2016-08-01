@@ -5,7 +5,7 @@ from cwevolver import mutate as mut
 # command line tool to evolve warriors...
 def main(args):
     for warrior_file in args.warriors:
-        mut.mut_1(open(warrior_file).readlines())
+        mut.evolver_1(warrior_file)
 
 if __name__ == '__main__':
     parser = ArgumentParser('Evolve corewar warrriors')

@@ -1,15 +1,10 @@
 from collections import namedtuple
-from random import randint, random
-from redcode import parse
-
-
-OPCODES = OPCODE.values()
-MODIFIERS = MODIFIERS.values()
-MODES = MODES.values()
+from random import randint, random, choice
+from redcode import parse, OPCODES, MODIFIERS, MODES
 
 def mutate(instruction, field):
     ins = list(instruction)
-    instruction[i] = random.choice(FIELD_TRANSFORM[i])
+    instruction[i] = choice(FIELD_TRANSFORM[i])
 
 def duplicate(warrior, dup_size, dup_dist):
     start = randint(0, len(warrior))
@@ -24,7 +19,7 @@ def delete(warrior, loss_size):
     
 def evolver_1(w):
     warrior = parse(w)
-
+    
     # Duplications
     prob_duplication = 0.01
     dup_size_values = range(1, 10)
@@ -36,7 +31,7 @@ def evolver_1(w):
 
     # Deletions
     prob_deletion = 0.01
-    del_size = range(1, 10)
+    del_size = range(1, 10)    
     if random() < prob_deletion:
         dup_size = choice(dup_size_values)
         dup_distance = choice(dup_distance_values)        
@@ -51,8 +46,12 @@ def evolver_1(w):
         4: MODES,
         5: range(-10, 10),
     }
-    prob_mutation = np.array([0.01, 0.01, 0.01, 0.01, 0.01, 0.01])
-    for i, mut_rate in enumerate(mutator):
+
+
+    instruction = choice(warrior.instructions)
+
+    prob_mutation = [0.01, 0.01, 0.01, 0.01, 0.01, 0.01]
+    for i, mut_rate in enumerate(prob_mutation):
         if random() < mut_rate:
             values = position_values[i]
             mutate(instruction, i, values)
