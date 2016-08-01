@@ -2,7 +2,6 @@ import numpy as np
 import subprocess
 from collections import namedtuple
 from random import randint, random, choice
-import commands
 from copy import deepcopy
 from collections import defaultdict, Counter
 
@@ -71,7 +70,7 @@ def evolve(warrior):
 
     return mutated
 
-def pmars(w1, w2):
+def pmars(w1, w2, rounds):
     with open('/tmp/w1', 'w') as W1:
         with open('/tmp/w2', 'w') as W2:
             print >>W1, w1
@@ -79,7 +78,7 @@ def pmars(w1, w2):
             W2.flush()
             W1.flush()
             try:
-                r = subprocess.check_output('/Users/jhc/_Devel/evolwar/pmars-server /tmp/w1 /tmp/w2 -r 100 2>/dev/null|grep Results:', shell=True)
+                r = subprocess.check_output('/Users/jhc/_Devel/evolwar/pmars-server /tmp/w1 /tmp/w2 -r %s 2>/dev/null|grep Results:' %rounds, shell=True)
             except:
                 return 0, 0, 0
             else:
@@ -89,7 +88,6 @@ def pmars(w1, w2):
 
 def compete(w1, w2, generations):
     g = 0
-    score = defaultdict(int)
     score = Counter()
     score[w1] += 0
     news = []
@@ -99,10 +97,10 @@ def compete(w1, w2, generations):
         score.update(news)
         news = []
         for w in score.keys():            
-            a, b, c = pmars(w, w2)
+            a, b, c = pmars(w, w2, 10)
             print a, b, c, len(score), g
             #raw_input()            
-            if a + b > 0:
+            if a + c > 0:
                 score[w] = a
                 ew = deepcopy(w)
                 if evolve(ew):
