@@ -82,7 +82,28 @@ class Warrior(object):
         return "<Warrior name=%s %d instructions>" % (self.name,
                                                       len(self.instructions))
 
+    def export(self):
+        lines = ["ORG %s" %self.start]
+        for i in self.instructions:
+            cmd = "%s.%s %s%s, %s%s" %i
+            
+            lines.append(cmd.upper())
+        lines.append('END')
+        
+        return '\n'.join(lines)
 
+    def __str__(self):
+        lines = ["ORG %s" %self.start]
+        for i in self.instructions:
+            cmd = "%s.%s %s%s, %s%s" %i
+            
+            lines.append(cmd.upper())
+        lines.append('END')
+        
+        return '\n'.join(lines)
+
+    
+        
 Instruction = namedtuple('Instruction',
                          'opcode modifier a_mode a_number b_mode b_number')
 
