@@ -76,7 +76,6 @@ def evolve(warrior):
 
 
 def pmars(w1, w2, rounds, pmars_server='pmars-server'):
-    pmars_server='../pmars-0.9.2/src/pmars'):
     "Return the scores of competing warriors w1 and w2"
     with tempfile.NamedTemporaryFile(dir='/dev/shm') as f1:
         f1.write(str(w1))
