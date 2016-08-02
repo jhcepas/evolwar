@@ -25,9 +25,7 @@ def delete(instructions, loss_size):
 
 def evolve(warrior):
     mutator = np.zeros(8)
-    #mutator = [0.0005, 0.001, 0.001, 0.01, 0.01, 0.001, 0.001, 0.001]
     instructions = warrior.instructions
-
     mutator[randint(0, 3)] = 1.0
 
     mutated = False
@@ -76,12 +74,11 @@ def evolve(warrior):
 
 
 def pmars(w1, w2, rounds, pmars_server='pmars-server'):
-    pmars_server='../pmars-0.9.2/src/pmars'):
     "Return the scores of competing warriors w1 and w2"
-    with tempfile.NamedTemporaryFile(dir='/dev/shm') as f1:
+    with tempfile.NamedTemporaryFile(dir='/tmp') as f1:
         f1.write(str(w1))
         f1.flush()
-        with tempfile.NamedTemporaryFile(dir='/dev/shm') as f2:
+        with tempfile.NamedTemporaryFile(dir='/tmp') as f2:
             f2.write(str(w2))
             f2.flush()
             try:
@@ -96,30 +93,36 @@ def pmars(w1, w2, rounds, pmars_server='pmars-server'):
 
 
 def compete(w1, w2, generations):
-    g = 0
-    score = Counter()
-    score[w1] += 0
-    news = []
-    while score:
+    g = 0    
+    score = [(0, w1)] 
+    min_fitness = 0
+    while min_fitness < 100:
         g += 1
-        score = Counter(dict(score.most_common(20)))
-        score.update(news)
-        news = []
-        for w in score.keys():
-            a, b, c = pmars(w, w2, 100)
-            print a, b, c, len(score), g
-            #raw_input()
-            if a + c > 0:
-                score[w] = a
-                ew = deepcopy(w)
-                if evolve(ew):
-                    news.append(ew)
-            else:
-                del score[w]
+        # Kill warriors bellow the top 20
+        score = sorted(score, reverse=True)[:20] 
+        min_fitness = score[-1][0]
 
-        print len(score)
         if g % 10 == 0:
-            open('best', 'w').write(score.most_common(1)[0][0].export())
+            open('best', 'w').write(score[0][1].export())
             open('orig', 'w').write(w2.export())
-            print 'best:', [c2 for c1, c2 in score.most_common(20)]
-            raw_input()
+            print 'best:', [c1 for c1, c2 in score]
+        
+        # Generate new warriors from the top 20 parents
+        evolved = []
+        for fitness, w in score:
+            for _ in xrange(2):
+                new = deepcopy(w)
+                evolve(new)
+                evolved.append(new)
+        
+        # Evaluate new warriors
+        for w in evolved:
+            a, b, c = pmars(w, w2, 100, './pmars-server')            
+            print a, b, c, "generarions:", g, "pop size:", len(evolved)
+
+            # If warrior won at least a battle, keep it 
+            if a + c > 0:
+                if a > min_fitness: 
+                    score.append((a, w)) 
+                
+
