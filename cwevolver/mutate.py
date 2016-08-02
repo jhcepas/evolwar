@@ -22,16 +22,16 @@ def delete(instructions, loss_size):
     start = randint(0, len(instructions))
     end = randint(start+1, start+loss_size+1)
     instructions[start:end] = []
-    
+
 def evolve(warrior):
     mutator = np.zeros(8)
     #mutator = [0.0005, 0.001, 0.001, 0.01, 0.01, 0.001, 0.001, 0.001]
     instructions = warrior.instructions
 
     mutator[randint(0, 3)] = 1.0
-    
+
     mutated = False
-    
+
     # Duplications
     prob_duplication = mutator[0]
     dup_size_values = range(1, 10)
@@ -39,16 +39,16 @@ def evolve(warrior):
     if random() < prob_duplication:
         mutated = True
         dup_size = choice(dup_size_values)
-        dup_dist = choice(dup_distance_values)        
+        dup_dist = choice(dup_distance_values)
         duplicate(instructions, dup_size, dup_dist)
 
     # Deletions
     prob_deletion = mutator[1]
-    del_size = range(1, 2)    
+    del_size = range(1, 2)
     if random() < prob_deletion:
         mutated = True
         loss_size = choice(dup_size_values)
-        loss_dist = choice(dup_distance_values)        
+        loss_dist = choice(dup_distance_values)
         delete(instructions, loss_size)
 
     # Point mutations
@@ -76,20 +76,23 @@ def evolve(warrior):
 
 
 def pmars(w1, w2, rounds, pmars_server='pmars-server'):
+    pmars_server='../pmars-0.9.2/src/pmars'):
     "Return the scores of competing warriors w1 and w2"
-    with tempfile.NamedTemporaryFile(suffix='w1', dir='/dev/shm') as f1:
+    with tempfile.NamedTemporaryFile(dir='/dev/shm') as f1:
         f1.write(str(w1))
-        with tempfile.NamedTemporaryFile(suffix='w2', dir='/dev/shm') as f2:
+        f1.flush()
+        with tempfile.NamedTemporaryFile(dir='/dev/shm') as f2:
             f2.write(str(w2))
+            f2.flush()
             try:
                 r = check_output([pmars_server, f1.name, f2.name,
                                   '-r', str(rounds)], stderr=open(os.devnull))
-                for line in r.splitlines():
-                    print(line)
-                    if line.startswith('Results:'):
-                        return [int(x) for x in line.strip().split()[1:]]
             except Exception:
                 return 0, 0, 0
+
+            for line in r.splitlines():
+                if line.startswith('Results:'):
+                    return [int(x) for x in line.strip().split()[1:]]
 
 
 def compete(w1, w2, generations):
@@ -102,10 +105,10 @@ def compete(w1, w2, generations):
         score = Counter(dict(score.most_common(20)))
         score.update(news)
         news = []
-        for w in score.keys():            
-            a, b, c = pmars(w, w2, 10)
+        for w in score.keys():
+            a, b, c = pmars(w, w2, 100)
             print a, b, c, len(score), g
-            #raw_input()            
+            #raw_input()
             if a + c > 0:
                 score[w] = a
                 ew = deepcopy(w)
@@ -113,7 +116,7 @@ def compete(w1, w2, generations):
                     news.append(ew)
             else:
                 del score[w]
-        
+
         print len(score)
         if g % 10 == 0:
             open('best', 'w').write(score.most_common(1)[0][0].export())
