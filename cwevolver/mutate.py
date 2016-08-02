@@ -1,20 +1,24 @@
 import numpy as np
-import subprocess
+from subprocess import check_output
 from collections import namedtuple
 from random import randint, random, choice
 from copy import deepcopy
 from collections import defaultdict, Counter
+import tempfile
+import os
 
 from redcode import parse, OPCODES, MODIFIERS, MODES, Instruction
 
 
 def duplicate(instructions, dup_size, dup_dist):
+    "Insert in-place a duplication of size dup_size after at max dup_dist"
     start = randint(0, len(instructions))
     end = randint(start+1, start+dup_size+1)
     insert_point = randint(start+1, start+dup_dist)
     instructions[insert_point:insert_point] = instructions[start:end]
 
 def delete(instructions, loss_size):
+    "Delete in-place at max loss_size instructions"
     start = randint(0, len(instructions))
     end = randint(start+1, start+loss_size+1)
     instructions[start:end] = []
@@ -70,20 +74,22 @@ def evolve(warrior):
 
     return mutated
 
-def pmars(w1, w2, rounds):
-    with open('/tmp/w1', 'w') as W1:
-        with open('/tmp/w2', 'w') as W2:
-            print >>W1, w1
-            print >>W2, w2
-            W2.flush()
-            W1.flush()
+
+def pmars(w1, w2, rounds, pmars_server='pmars-server'):
+    "Return the scores of competing warriors w1 and w2"
+    with tempfile.NamedTemporaryFile(suffix='w1', dir='/dev/shm') as f1:
+        f1.write(str(w1))
+        with tempfile.NamedTemporaryFile(suffix='w2', dir='/dev/shm') as f2:
+            f2.write(str(w2))
             try:
-                r = subprocess.check_output('/Users/jhc/_Devel/evolwar/pmars-server /tmp/w1 /tmp/w2 -r %s 2>/dev/null|grep Results:' %rounds, shell=True)
-            except:
+                r = check_output([pmars_server, f1.name, f2.name,
+                                  '-r', str(rounds)], stderr=open(os.devnull))
+                for line in r.splitlines():
+                    print(line)
+                    if line.startswith('Results:'):
+                        return [int(x) for x in line.strip().split()[1:]]
+            except Exception:
                 return 0, 0, 0
-            else:
-                a, b, c = map(int, r.strip().split()[1:])
-                return a, b, c
 
 
 def compete(w1, w2, generations):
