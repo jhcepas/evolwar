@@ -93,36 +93,50 @@ def pmars(w1, w2, rounds, pmars_server='pmars-server'):
 
 
 def compete(w1, w2, generations):
-    g = 0    
-    score = [(0, w1)] 
+    g = 0
+    mutants = 0
+    populations = [[ (0, w1) ]] * 5
     min_fitness = 0
-    while min_fitness < 100:
-        g += 1
-        # Kill warriors bellow the top 20
-        score = sorted(score, reverse=True)[:20] 
-        min_fitness = score[-1][0]
+    max_fitness = 0
+    for expected_fitness in [10, 100]:
+        while max_fitness < expected_fitness:
+            g += 1
+            # Generate new warriors from the top 20 parents
+            evolved = []
+            for pop in populations:
+                for fitness, w in pop:
+                    if fitness < expected_fitness:
+                        for _ in xrange(1):
+                            new = deepcopy(w)
+                            evolve(new)
+                            evolved.append((new, pop))
 
-        if g % 10 == 0:
-            open('best', 'w').write(score[0][1].export())
-            open('orig', 'w').write(w2.export())
-            print 'best:', [c1 for c1, c2 in score]
-        
-        # Generate new warriors from the top 20 parents
-        evolved = []
-        for fitness, w in score:
-            for _ in xrange(2):
-                new = deepcopy(w)
-                evolve(new)
-                evolved.append(new)
-        
-        # Evaluate new warriors
-        for w in evolved:
-            a, b, c = pmars(w, w2, 100, './pmars-server')            
-            print a, b, c, "generarions:", g, "pop size:", len(evolved)
+            # Evaluate new warriors
+            new_mutant = 0
+            for w, pop in evolved:
+                mutants += 1
+                new_mutant += 1
+                a, b, c = pmars(w, w2, expected_fitness, './pmars-server')
+                print '% 3s % 3s % 3s   score:% 3d /% 3d   mutants:% 7d   generarion:% 3d /% 3d' %\
+                    (a, b, c, max_fitness, expected_fitness, mutants, new_mutant, len(evolved))
 
-            # If warrior won at least a battle, keep it 
-            if a + c > 0:
-                if a > min_fitness: 
-                    score.append((a, w)) 
-                
+                # If warrior won at least a battle, keep it 
+                if a + c > 0:
+                    if a > min_fitness: 
+                        pop.append((a, w))
 
+            populations = [sorted(pop, reverse=True)[:20] for pop in populations]
+            populations.sort(reverse=True)
+            min_fitness = populations[0][-1][0]
+            max_fitness = populations[0][0][0]
+
+            if g % 10 == 0:
+                open('best', 'w').write(populations[0][0][1].export())
+                open('orig', 'w').write(w2.export())
+                print 'best:', [fit for fit, w in pop for pop in populations]
+                raw_input()
+        raw_input()
+
+        open('best', 'w').write(populations[0][0][1].export())
+        open('orig', 'w').write(w2.export())
+        print 'best:', [fit for fit, w in pop for pop in populations]
